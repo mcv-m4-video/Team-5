@@ -1,0 +1,1 @@
+The sequences have to be in the same folder with different subfolders for each sequnce.
