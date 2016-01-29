@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Video surveillance for road traffic monitoring : ">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Video surveillance for road traffic monitoring</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/mcv-m4-video/Team-5">View on GitHub</a>
+
+          <h1 id="project_title">Video surveillance for road traffic monitoring</h1>
+          <h2 id="project_tagline"></h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/mcv-m4-video/Team-5/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/mcv-m4-video/Team-5/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>The foreground segmentation code, provides the possible F1 scores with
+the given parameters alpha and phi. It uses adaptive learning. The F1 calculation 
+is done by PerformanceEvaluationPixel.m and PerformanceEvaluationPixel.m. So they need to be
+in the same folder. The shadow detection code does not affect the result, because we could not increase
+the F1 score. Precision-recall and AUC value are also calculated. </p>
+
+<p>The optical flow estimation is based on the block matching. It gives good results. The affine transform
+matrix can be extracted from the optical flow estimation. It is used for the stabilize the traffic sequence. 
+The block matching algorithm is more useful than Lucas-Kanade considering the stabilization, because its
+estimation is better. </p>
+
+<p>The tracking is done by three methods: Deep Learning Tracker, Mean Shift Tracker and Kalman Filter. Kalman filter
+is the MATLAB's built-in function. Deep learning and mean shift codes are made available for multi-object tracking. </p>
+
+<h3>
+<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+
+<p>This are the people who did that practices:</p>
+
+<p>AKHIL GURRAM (<a href="https://github.com/akhil-robotvision" class="user-mention">@akhil-robotvision</a>)
+Xialei Liu (<a href="https://github.com/xialeiliu" class="user-mention">@xialeiliu</a>)
+Vacit Oguz Yazici (<a href="https://github.com/Vacoz" class="user-mention">@Vacoz</a>)</p>
+
+<p>You can find paper in this <a href="https://www.sharelatex.com/project/56abc1dcef3d3b7849f3cc84/output/output.pdf?cache_bust=1454098039389&amp;compileGroup=standard&amp;build=1528eff4dbc">link</a> and <a href="https://github.com/mcv-m4-video/Team-5">code</a>.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Video surveillance for road traffic monitoring maintained by <a href="https://github.com/mcv-m4-video">mcv-m4-video</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
