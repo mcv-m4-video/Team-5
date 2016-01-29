@@ -1,0 +1,166 @@
+function Main_MarkI
+
+DatabaseName = 'TRAFFIC';
+[Im, GT, BG, BFG] = ReadingFrames(DatabaseName);
+
+% Foreground extraction and Tracking using Kalman filter
+
+% MaskImages = multiObjectTracking_MarkII(DatabaseName);
+% F1_Kalman = F1Measure_(MaskImages, GT);
+
+
+%%
+
+%% Own foreground extraction and kalman filter tracking
+[ForeGroundR ] = ForegroundExt_Gaussian(Im, GT);
+
+% wrt backgraound + foreground GT
+for i = 1:length(ForeGroundR)
+    [F1(i), pixelPrecision(i), pixelSensitivity(i)] = F1Measure_(ForeGroundR(i).ForeG, BFG(:,:,(size(Im, 3)/2)+1:size(Im, 3)));
+end
+[F1Measure, PhiAlphaValLoc] = max(F1);
+phi = ForeGroundR(PhiAlphaValLoc).phi;
+alpha = ForeGroundR(PhiAlphaValLoc).Alpha;
+
+% wrt foreground GT
+for i = 1:length(ForeGroundR)
+    [GTF1(i), GTpixelPrecision(i), GTpixelSensitivity(i)] = F1Measure_(ForeGroundR(i).ForeG, GT(:,:,(size(Im, 3)/2)+1:size(Im, 3)));
+end
+[GTF1Measure, GTPhiAlphaValLoc] = max(GTF1);
+GTphi = ForeGroundR(GTPhiAlphaValLoc).phi;
+GTalpha = ForeGroundR(GTPhiAlphaValLoc).Alpha;
+
+% wrt foreground BG
+for i = 1:length(ForeGroundR)
+    [BGF1(i), BGpixelPrecision(i), BGpixelSensitivity(i)] = F1Measure_(ForeGroundR(i).ForeG, BG(:,:,(size(Im, 3)/2)+1:size(Im, 3)));
+end
+[BGF1Measure, BGPhiAlphaValLoc] = max(BGF1);
+BGphi = ForeGroundR(BGPhiAlphaValLoc).phi;
+BGalpha = ForeGroundR(BGPhiAlphaValLoc).Alpha;
+
+% wrt foreground FO
+for i = 1:length(ForeGroundR)
+    [FOF1(i), FOpixelPrecision(i), FOpixelSensitivity(i)] = F1Measure_(ForeOnly, GT(:,:,(size(Im, 3)/2)+1:size(Im, 3)));
+end
+[FOF1Measure, FOPhiAlphaValLoc] = max(FOF1);
+FOphi = ForeGroundR(FOPhiAlphaValLoc).phi;
+FOalpha = ForeGroundR(FOPhiAlphaValLoc).Alpha;
+
+figure(1); hold on
+subplot(3, 1, 1);plot(F1);
+subplot(3, 1, 2);plot(pixelPrecision);
+subplot(3, 1, 3);plot(pixelSensitivity);
+
+
+figure(2);hold on
+plot(F1, 'r');
+plot(pixelPrecision, 'g');
+plot(pixelSensitivity, 'b')
+
+% phi = 0.5, alpha = 6;
+%% kalman tracking
+
+Kalman_tracking_MarkIII(uint8(Im(:,:,(size(Im, 3)/2)+1:size(Im, 3))), ForeGroundR(PhiAlphaValLoc).ForeG);
+
+%% Meanshift
+
+%% particle filter
+
+%% KLT
+
+%% deep learning
+
+
+
+%%
+TheEnd = 1;
+
+end
+
+
+%% Reading frames
+function [Im, GT, BG, BckGForeG] = ReadingFrames(DatabaseName)
+
+%% Reading required frames
+if(strcmp(DatabaseName, 'TRAFFIC'))
+    
+    %% Ims
+    for i = 951:1050
+        Im(:,:,i-951+1) = rgb2gray(imread(['../../../Datasets/traffic/input/in00' sprintf('%0.4d', i) '.jpg']));
+        GTimg = imread(['../../../Datasets/traffic/groundtruth/gt00' sprintf('%0.4d', i) '.png']);
+        GT(:,:,i-951+1) = GTimg == 255;
+        BG(:,:,i-951+1) = GTimg == 0 | GTimg == 50;
+        BckGForeG(:,:,i-951+1) = GTimg > 0;
+    end
+    Im = double(Im);
+elseif(strcmp(DatabaseName, 'HIGHWAY'))
+    
+    %% HIGHWAY
+    for i = 1051:1350
+        Im(:,:,i-1051+1) = rgb2gray(imread(['../../../Datasets/highway/input/in00' sprintf('%0.4d', i) '.jpg']));
+        Gtimg = imread(['../../../Datasets/highway/groundtruth/gt00' sprintf('%0.4d', i) '.png']);
+        GT(:,:,i-1051+1) = Gtimg == 255;
+        BG(:,:,i-1051+1) = Gtimg == 0 | Gtimg == 50 ;
+        BckGForeG(:,:,i-951+1) = GTimg > 0;
+    end
+    Im = double(Im);
+    
+elseif(strcmp(DatabaseName, 'FALL'))
+    
+    %% FALL
+    for i = 1461:1560
+        Im(:,:,i-1461+1) = rgb2gray(imread(['../../../Datasets/fall/input/in00' sprintf('%0.4d', i) '.jpg']));
+        GTimg = imread(['../../../Datasets/fall/groundtruth/gt00' sprintf('%0.4d', i) '.png']);
+        GT(:,:,i-1461+1) = GTimg == 255;
+        BG(:,:,i-1461+1) = GTimg == 0 | GTimg == 50 ;
+        BckGForeG(:,:,i-951+1) = GTimg > 0;
+    end
+    
+    Im = double(Im);
+    
+end
+end
+
+
+%% Foreground extraction using gaussian filter
+function [ResultsStruct ] = ForegroundExt_Gaussian(Ims, GTIms)
+
+%% Compute mean and variance for each pixel for first 50% frames
+MeanIms = mean(Ims(:,:,1:size(Ims, 3)/2), 3);
+VarIms = var(Ims(:,:,1:size(Ims, 3)/2), 0, 3);
+
+%% First method: obtain best alpha and then phi
+%  first step : obtain best alpha
+MeanIms1=MeanIms;
+VarIms1=VarIms;
+se = strel('square', 7);
+Count = 1;
+for phi = 0:0.01:1
+    for Alpha = [0.1:0.1:0.9,1:15]
+        
+        MeanIms=MeanIms1; VarIms=VarIms1;
+        for i=size(Ims, 3)/2+1:size(Ims, 3)
+            MeanIms = phi*Ims(:,:,i).*(1-GTIms(:,:,i)) + (1-phi)*MeanIms.*(1-GTIms(:,:,i));% + MeanIms.*GTIms(:,:,i);
+            VarIms = phi*(Ims(:,:,i)-MeanIms).^2.*(1-GTIms(:,:,i)) + (1-phi)*VarIms.*(1-GTIms(:,:,i));% + VarIms.*GTIms(:,:,i);
+        end
+        
+        IIms = Ims(:,:,(size(Ims, 3)/2)+1:size(Ims, 3));
+        RIms = abs((IIms - repmat(MeanIms, [1, 1, size(IIms, 3)]))) >= ...
+            Alpha*(repmat(sqrt(VarIms), [1, 1, size(IIms, 3)]) + 2);
+        
+        for i =1:size(RIms, 3)
+            %best config
+            RIms(:,:,i) = imclose(RIms(:,:,i),se);
+            RIms(:,:,i) = imopen(RIms(:,:,i),se);
+        end
+        
+        ResultsStruct(Count).phi = phi;
+        ResultsStruct(Count).Alpha = Alpha;
+        ResultsStruct(Count).ForeG = RIms;
+        
+        Count = Count + 1
+    end
+    phi
+end
+end
+
